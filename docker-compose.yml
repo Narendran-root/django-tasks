@@ -1,27 +1,31 @@
+version: '3.8'
 
 services:
   db:
-    image: postgis/postgis:16-master
+    image: postgis/postgis:16-master  # You can use 'postgres' image if you don't need PostGIS.
     ports:
       - "5432:5432"
     volumes:
       - ./data/db:/var/lib/postgresql/data
     environment:
-      - POSTGRES_DB=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=${POSTGRES_DB}  # Use the value from your .env file
+      - POSTGRES_USER=${POSTGRES_USER}  # Use the value from your .env file
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}  # Use the value from your .env file
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}"]  # Healthcheck using the user from the .env
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   web:
-    build: .
-    command: uvicorn core.asgi:application --host 0.0.0.0 --port 80 --reload --log-config log_config.json
+    build: .  # Assuming you have a Dockerfile to build your Django app
+    command: uvicorn core.asgi:application --host 0.0.0.0 --port 8000 --reload --log-config log_config.json
     volumes:
-      - .:/code
-      - ./temp/:/tmp/
+      - .:/code  # Mount the current directory as a volume
+      - ./temp/:/tmp/  # Temporary files volume
     ports:
-      - "80:80"
+      - "8000:8000"  # Expose port 8000 for your Django app
     depends_on:
-      - db
+      - db  # Wait for the db service to be ready before starting web
     env_file:
-      - ".env"
-
-# sudo docker-compose up --build
+      - ".env"  # Ensure environment variables are loaded from the .env file

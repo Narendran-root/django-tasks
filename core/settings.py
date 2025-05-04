@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config, Csv
 import dj_database_url
 import os
 
@@ -63,7 +64,7 @@ ROOT_URLCONF = "core.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "client", "dist")],
+        #"DIRS": [os.path.join(BASE_DIR, "client", "dist")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -82,6 +83,25 @@ WSGI_APPLICATION = "core.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+
+# Initialize the config object to load the .env file
+#config = Config()
+
+# Secret Key and Debug mode
+SECRET_KEY = config("SECRET_KEY", default="django-insecure-default-key")
+DEBUG = config("DEBUG", default=True, cast=bool)
+
+# Database Configuration
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": config("POSTGRES_DB"),
+        "USER": config("POSTGRES_USER"),
+        "PASSWORD": config("POSTGRES_PASSWORD"),
+        "HOST": "db",  # Make sure this matches your Docker service name
+        "PORT": "5432",  # Default PostgreSQL port
+    }
+}
 # DATABASES = {
 #     "default": {
 #         "ENGINE": "django.db.backends.sqlite3",
@@ -132,7 +152,6 @@ USE_TZ = True
 STATIC_URL = "static/"
 
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "client", "dist")]
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Default primary key field type
